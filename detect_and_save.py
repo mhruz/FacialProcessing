@@ -67,9 +67,10 @@ if __name__ == "__main__":
 
             shape_dict = {}
             for i in range(shape.num_parts):
-                shape_dict[i] = {"x": shape.part(i).x, "y": shape.part(i).y}
+                shape_dict[i] = {"x": shape.part(i).x / img.shape[1], "y": shape.part(i).y / img.shape[0]}
 
-            data[filename].append({"bbox": {"left": d.left(), "top": d.top(), "right": d.right(), "bottom": d.bottom()},
+            data[filename].append({"bbox": {"left": d.left() / img.shape[1], "top": d.top() / img.shape[0],
+                                            "right": d.right() / img.shape[1], "bottom": d.bottom() / img.shape[0]},
                                    "shape": shape_dict})
 
         if args.verbose == 1:
