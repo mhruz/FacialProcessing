@@ -1,5 +1,4 @@
 import dlib
-import glob
 import os
 import argparse
 import json
@@ -8,6 +7,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Detect facial landmarks in dir of images.')
     parser.add_argument('path_images', type=str, help='path to images to detect facial keypoints in')
     parser.add_argument('path_to', type=str, help='full-path where to save the data (json)')
+    parser.add_argument('--only_face', type=bool, help='specify whether to detect only faces', default=False)
     parser.add_argument('--data_range', type=str, help='data range in format - from:to (eg. 0:100)', default="0:")
     parser.add_argument('--verbose', type=int,
                         help='level of verbosity: 0 - nothing; 1 - draw detections and wait for \'enter\'', default=0)
@@ -16,7 +16,10 @@ if __name__ == "__main__":
     predictor_path = "models/shape_predictor_68_face_landmarks.dat"
 
     detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor(predictor_path)
+
+    if not args.only_face:
+        predictor = dlib.shape_predictor(predictor_path)
+
     if args.verbose == 1:
         win = dlib.image_window()
 
@@ -57,21 +60,27 @@ if __name__ == "__main__":
         for k, d in enumerate(dets):
             print("Detection {}: Left: {} Top: {} Right: {} Bottom: {}".format(
                 k, d.left(), d.top(), d.right(), d.bottom()))
-            # Get the landmarks/parts for the face in box d.
-            shape = predictor(img, d)
-            print("Part 0: {}, Part 1: {} ...".format(shape.part(0),
-                                                      shape.part(1)))
-            # Draw the face landmarks on the screen.
-            if args.verbose == 1:
-                win.add_overlay(shape)
 
-            shape_dict = {}
-            for i in range(shape.num_parts):
-                shape_dict[i] = {"x": shape.part(i).x / img.shape[1], "y": shape.part(i).y / img.shape[0]}
+            if not args.only_face:
+                # Get the landmarks/parts for the face in box d.
+                shape = predictor(img, d)
+                print("Part 0: {}, Part 1: {} ...".format(shape.part(0),
+                                                          shape.part(1)))
+                # Draw the face landmarks on the screen.
+                if args.verbose == 1:
+                    win.add_overlay(shape)
 
-            data[filename].append({"bbox": {"left": d.left() / img.shape[1], "top": d.top() / img.shape[0],
-                                            "right": d.right() / img.shape[1], "bottom": d.bottom() / img.shape[0]},
-                                   "shape": shape_dict})
+                shape_dict = {}
+                for i in range(shape.num_parts):
+                    shape_dict[i] = {"x": shape.part(i).x / img.shape[1], "y": shape.part(i).y / img.shape[0]}
+
+                data[filename].append({"bbox": {"left": d.left() / img.shape[1], "top": d.top() / img.shape[0],
+                                                "right": d.right() / img.shape[1], "bottom": d.bottom() / img.shape[0]},
+                                       "shape": shape_dict})
+            else:
+                data[filename].append({"bbox": {"left": d.left() / img.shape[1], "top": d.top() / img.shape[0],
+                                                "right": d.right() / img.shape[1],
+                                                "bottom": d.bottom() / img.shape[0]}})
 
         if args.verbose == 1:
             win.add_overlay(dets)
