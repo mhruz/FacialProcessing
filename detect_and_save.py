@@ -7,6 +7,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Detect facial landmarks in dir of images.')
     parser.add_argument('path_images', type=str, help='path to images to detect facial keypoints in')
     parser.add_argument('path_to', type=str, help='full-path where to save the data (json)')
+    parser.add_argument('--resize_factor', type=float, help='resize factor for the images', default=1.0)
     parser.add_argument('--only_face', type=bool, help='specify whether to detect only faces', default=False)
     parser.add_argument('--data_range', type=str, help='data range in format - from:to (eg. 0:100)', default="0:")
     parser.add_argument('--verbose', type=int,
@@ -41,6 +42,8 @@ if __name__ == "__main__":
     for idx, f in enumerate(image_files[data_range[0]:data_range[1]]):
         print("Processing file {}: {}".format(idx, f))
         img = dlib.load_rgb_image(os.path.join(args.path_images, f))
+        if args.resize_factor != 1.0:
+            img = dlib.resize_image(img, args.resize_factor)
 
         if args.verbose == 1:
             win.clear_overlay()
